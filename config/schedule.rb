@@ -19,6 +19,8 @@
 
 # Learn more: http://github.com/javan/whenever
 
+set :job_template, "/bin/sh -c ':job'"
+
 every 5.minutes do
     script 'mbta.rb'
 end
