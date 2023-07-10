@@ -6,18 +6,20 @@ require 'chronic'
 require 'logger'
 
 logger = Logger.new(STDERR)
+logger.progname = 'MBTA Alerts'
+logger.info 'Running job'
 
 mbta_uri = URI 'https://api-v3.mbta.com/alerts'
 kc_uri = URI 'https://knowhere.cafe/api/v1/statuses'
 token = ENV['KC_MBTA_TOKEN']
 if token.nil? then
+    logger.fatal 'KC_MBTA_TOKEN'
     exit 1
 end
 
-logger.info 'Running MBTA Alerts job'
-
 res = Net::HTTP.get_response mbta_uri
 unless res.kind_of? Net::HTTPSuccess then
+    logger.fatal 'Fetching error' + res.inspect + res.body
     exit 1
 end
 
@@ -35,6 +37,7 @@ for alert in data do
     res = Net::HTTP.post(kc_uri, form, headers)
 
     unless res.kind_of? Net::HTTPSuccess then
+        logger.fatal 'Posting error: ' + res.inspect + res.body
         exit 1
     end
 end
