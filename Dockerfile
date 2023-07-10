@@ -1,5 +1,7 @@
 FROM ruby:alpine
 
+RUN apk update && apk add --no-cache build-base
+
 WORKDIR /usr/herd
 
 COPY . .
