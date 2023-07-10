@@ -2,6 +2,10 @@
 
 require 'net/http'
 require 'json'
+require 'chronic'
+require 'logger'
+
+logger = Logger.new(STDERR)
 
 mbta_uri = URI 'https://api-v3.mbta.com/alerts'
 kc_uri = URI 'https://knowhere.cafe/api/v1/statuses'
@@ -10,16 +14,23 @@ if token.nil? then
     exit 1
 end
 
+logger.info 'Running MBTA Alerts job'
+
 res = Net::HTTP.get_response mbta_uri
 unless res.kind_of? Net::HTTPSuccess then
     exit 1
 end
 
-data = JSON.parse(res.body)['data']
+fma = Chronic.parse('5 minutes ago')
+data = JSON.parse(res.body)['data'] \
+           .map{ |a| a['attributes'] } \
+           .filter { |a| Chronic.parse(a['updated_at']) > fma } \
+           .sort_by { |a| a['updated_at'] }
 
 for alert in data do
-    a = alert['attributes']
-    form = "status=#{a['header'] + (a['description'] || '')}"
+    logger.info 'Posting new alert last updated at: ' + alert['updated_at']
+
+    form = "status=" + alert['header']
     headers = { 'Authorization' => "Bearer #{token}" }
     res = Net::HTTP.post(kc_uri, form, headers)
 
@@ -27,3 +38,5 @@ for alert in data do
         exit 1
     end
 end
+
+logger.close
