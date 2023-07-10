@@ -1,9 +1,10 @@
-FROM ruby:latest-alpine
+FROM ruby:alpine
 
-WORDIR /usr/herd
+WORKDIR /usr/herd
 
 COPY . .
 
+RUN bundle install
 RUN bundle exec whenever --update-crontab
 
 CMD ["exec", "crond", "-f"]
