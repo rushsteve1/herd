@@ -40,7 +40,7 @@ for alert in data do
             .map { |r| '#MBTA_' + r.sub('-', '_').strip }
             .join(' ')
 
-    form = "status=\"#{alert['header'].strip}\n\n#{tags}\""
+    form = "status=#{alert['header'].strip}\n\n#{tags}"
     headers = { 'Authorization' => "Bearer #{token}" }
     res = Net::HTTP.post(kc_uri, form, headers)
 
