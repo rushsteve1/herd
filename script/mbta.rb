@@ -32,7 +32,15 @@ data = JSON.parse(res.body)['data'] \
 for alert in data do
     logger.info 'Posting new alert last updated at: ' + alert['updated_at']
 
-    form = "status=" + alert['header'].strip + "\n\n#MBTA #Boston #Massachusetts"
+    tags =
+        alert['informed_entity']
+            .map { |ie| ie['route'] || ie['facility'] }
+            .compact
+            .uniq
+            .map { |r| '#MBTA_' + r.sub('-', '_').strip }
+            .join(' ')
+
+    form = "status=\"#{alert['header'].strip}\n\n#{tags}\""
     headers = { 'Authorization' => "Bearer #{token}" }
     res = Net::HTTP.post(kc_uri, form, headers)
 
